@@ -91,7 +91,6 @@ jobs:
       - run:
           command: |
             echo "this command is running from s3-deploy-dev"
-            aws s3 ls
       # - aws-s3/sync:
       #     from: .
       #     to: 's3://dev-website-circleci.com/'
@@ -109,7 +108,6 @@ jobs:
       - run:
           command: |
             echo "this command is running from s3-deploy-stage"
-            aws s3 ls
       # - aws-s3/sync:
       #     from: .
       #     to: 's3://stage-website-circleci.com/'
