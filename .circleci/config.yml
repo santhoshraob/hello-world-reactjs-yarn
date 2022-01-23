@@ -25,7 +25,6 @@ jobs:
             - ~/.npm
             - ~/.cache
           key: v1-dependencies-{{ checksum "package.json" }}
-      - run: yarn lint
       - run: yarn test
       - run: yarn build
       - persist_to_workspace:
