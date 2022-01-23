@@ -82,6 +82,52 @@ jobs:
             terraform init
             terraform apply -auto-approve
   
+  # terraform init and plan for Stage
+  terraform-stage-plan:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and plan
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform plan
+  
+  # terraform init and apply for Stage
+  terraform-stage-apply:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and apply
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform apply -auto-approve
+  
   # deploying reactjs content to DEV s3-bucket
   s3-deploy-dev:
     executor: my-executor
@@ -136,6 +182,8 @@ workflows:
           requires:
             - terraform-dev-plan
             - terraform-dev-apply
+            - terraform-stage-plan
+            - terraform-stage-apply
           filters:
             branches:
               only: development
@@ -147,12 +195,25 @@ workflows:
           filters:
             branches:
               only: development
+      - terraform-stage-plan:
+          context: terraform
+          filters:
+            branches: 
+              only: stage
+      - terraform-stage-apply:
+          context: terraform
+          requires:
+            - terraform-stage-plan
+          filters:
+            branches: 
+              only: stage
+
       - s3-deploy-stage:
           type: approval
           requires:
             - s3-deploy-dev
           filters:
             branches:
-              only: development
+              only: stage
       
       
