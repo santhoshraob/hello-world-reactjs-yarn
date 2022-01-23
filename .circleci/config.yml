@@ -90,7 +90,7 @@ jobs:
           at: .
       - aws-s3/sync:
           from: build
-          to: 'http://s3-website-dev.hashicorp.com'
+          to: 's3-website-dev.hashicorp.com'
           arguments: |
             --delete \
             --acl public-read \
