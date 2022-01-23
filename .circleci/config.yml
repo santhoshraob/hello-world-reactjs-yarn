@@ -92,10 +92,9 @@ jobs:
           command: |
             echo "this command is running from s3-deploy-dev"
       - aws-s3/sync:
-          from: .
+          from: ./build
           to: 's3://dev-website-circleci.com/'
           arguments: |
-            --region=eu-west-2 \
             --delete \
             --acl public-read \
             --cache-control "max-age=86400"
@@ -109,13 +108,13 @@ jobs:
       - run:
           command: |
             echo "this command is running from s3-deploy-stage"
-      # - aws-s3/sync:
-      #     from: .
-      #     to: 's3://stage-website-circleci.com/'
-      #     arguments: |
-      #       --delete \
-      #       --acl public-read \
-      #       --cache-control "max-age=86400"
+      - aws-s3/sync:
+          from: ./build
+          to: 's3://stage-website-circleci.com/'
+          arguments: |
+            --delete \
+            --acl public-read \
+            --cache-control "max-age=86400"
           
 workflows:
   version: 2
