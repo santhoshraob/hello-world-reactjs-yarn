@@ -91,13 +91,14 @@ jobs:
       - run:
           command: |
             echo "this command is running from s3-deploy-dev"
-      # - aws-s3/sync:
-      #     from: .
-      #     to: 's3://dev-website-circleci.com/'
-      #     arguments: |
-      #       --delete \
-      #       --acl public-read \
-      #       --cache-control "max-age=86400"
+      - aws-s3/sync:
+          from: .
+          to: 's3://dev-website-circleci.com/'
+          arguments: |
+            --region=$AWS_REGION
+            --delete \
+            --acl public-read \
+            --cache-control "max-age=86400"
   
   # deploying reactjs content to STAGE s3-bukcet
   s3-deploy-stage:
