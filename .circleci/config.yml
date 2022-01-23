@@ -86,7 +86,6 @@ workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build
       - terraform-dev-plan:
           context: terraform
           filters:
@@ -96,6 +95,13 @@ workflows:
           context: terraform
           requires:
             - terraform-dev-plan
+          filters:
+            branches:
+              only: development
+      - build:
+          requires:
+            - terraform-dev-plan
+            - terraform-dev-apply
           filters:
             branches:
               only: development
