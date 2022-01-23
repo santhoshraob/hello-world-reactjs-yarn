@@ -145,7 +145,8 @@ workflows:
           type: approval
           requires:
             - s3-deploy-stage
-      - s3-deploy-stage:
-          requires: 
-            - hold
+          filters:
+            branches:
+              only: development
+      
       
