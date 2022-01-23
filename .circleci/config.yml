@@ -90,7 +90,7 @@ jobs:
           at: .
       - aws-s3/sync:
           from: ./build
-          to: 's3://dev-website-circleci.com'
+          to: 's3://dev-website-circleci.com.s3.eu-west-2.amazonaws.com'
           arguments: |
             --delete \
             --acl public-read \
