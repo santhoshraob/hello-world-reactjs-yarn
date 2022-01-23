@@ -186,7 +186,10 @@ workflows:
             - terraform-stage-apply
           filters:
             branches:
-              only: development
+              only: 
+                development
+                stage
+
       - s3-deploy-dev:
           requires:
             - build
