@@ -101,7 +101,7 @@ jobs:
           command: |
             export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
             export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-            cd ./terraform/stage
+            cd ./terraform/development
             terraform init
             terraform plan
   
@@ -124,7 +124,7 @@ jobs:
           command: |
             export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
             export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-            cd ./terraform/stage
+            cd ./terraform/development
             terraform init
             terraform apply -auto-approve
   
@@ -164,21 +164,7 @@ jobs:
           
 workflows:
   version: 2
-  build-workflow:
-    jobs:
-      - build:
-          requires:
-            - terraform-dev-plan
-            - terraform-dev-apply
-            - terraform-stage-plan
-            - terraform-stage-apply
-          filters:
-            branches:
-              only: 
-                - development
-                - stage
-
-  devlopment-workflow:
+  build_test_deploy:
     jobs:
       - terraform-dev-plan:
           context: terraform
@@ -192,6 +178,17 @@ workflows:
           filters:
             branches:
               only: development
+      - build:
+          requires:
+            - terraform-dev-plan
+            - terraform-dev-apply
+            - terraform-stage-plan
+            - terraform-stage-apply
+          filters:
+            branches:
+              only:   
+                - development
+                - stage  
       - s3-deploy-dev:
           requires:
             - build
@@ -200,9 +197,6 @@ workflows:
           filters:
             branches:
               only: development
-
-  Stage-workflow: 
-    jobs:
       - terraform-stage-plan:
           context: terraform
           filters:
@@ -215,6 +209,14 @@ workflows:
           filters:
             branches: 
               only: stage
+
+      # - s3-deploy-stage:
+      #     type: approval
+      #     requires:
+      #       - s3-deploy-dev
+      #     filters:
+      #       branches:
+      #         only: stage
       - s3-deploy-stage:
           requires:
             - build
@@ -222,5 +224,5 @@ workflows:
             - terraform-stage-apply
           filters:
             branches:
-              only: stage 
+              only: stage
       
