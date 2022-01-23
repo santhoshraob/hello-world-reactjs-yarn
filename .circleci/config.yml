@@ -141,10 +141,10 @@ workflows:
           filters:
             branches:
               only: development
-      - hold:
+      - s3-deploy-stage:
           type: approval
           requires:
-            - s3-deploy-stage
+            - s3-deploy-dev
           filters:
             branches:
               only: development
