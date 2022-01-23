@@ -187,8 +187,8 @@ workflows:
           filters:
             branches:
               only: 
-                development
-                stage
+                - development
+                - stage
 
       - s3-deploy-dev:
           requires:
