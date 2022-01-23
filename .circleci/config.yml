@@ -95,6 +95,7 @@ jobs:
             --delete \
             --acl public-read \
             --cache-control "max-age=86400"
+          aws_region: AWS_REGION  
 
 workflows:
   version: 2
