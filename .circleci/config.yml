@@ -95,7 +95,7 @@ jobs:
           from: .
           to: 's3://dev-website-circleci.com/'
           arguments: |
-            --region=eu-west-2
+            --region=eu-west-2 \
             --delete \
             --acl public-read \
             --cache-control "max-age=86400"
