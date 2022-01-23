@@ -82,7 +82,7 @@ jobs:
             terraform init
             terraform apply -auto-approve
   
-  # deploying reactjs content to s3 bucket
+  # deploying reactjs content to DEV s3-bucket
   s3-deploy-dev:
     executor: my-executor
     steps:
@@ -91,6 +91,20 @@ jobs:
       - aws-s3/sync:
           from: .
           to: 's3://dev-website-circleci.com/'
+          arguments: |
+            --delete \
+            --acl public-read \
+            --cache-control "max-age=86400"
+  
+  # deploying reactjs content to STAGE s3-bukcet
+  s3-deploy-stage:
+    executor: my-executor
+    steps:
+      - attach_workspace:
+          at: .
+      - aws-s3/sync:
+          from: .
+          to: 's3://stage-website-circleci.com/'
           arguments: |
             --delete \
             --acl public-read \
@@ -127,3 +141,11 @@ workflows:
           filters:
             branches:
               only: development
+      - hold:
+          type: approval
+          requires:
+            - s3-deploy-stage
+      - s3-deploy-stage:
+          requires: 
+            - hold
+      
