@@ -88,12 +88,12 @@ workflows:
     jobs:
       - build
       - terraform-dev-plan:
-          context: org-global
+          context: terraform
           filters:
             branches: 
               only: development
       - terraform-dev-apply:
-          context: org-global
+          context: terraform
           requires:
             - terraform-dev-plan
           filters:
