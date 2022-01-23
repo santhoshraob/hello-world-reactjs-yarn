@@ -8,6 +8,10 @@ executors:
     docker:
       - image: cimg/node:16.10.0
     working_directory: ~/repo
+  terra:
+    docker:
+      - image: hashicorp/terraform:light
+    working_directory: ~/repo
   
 jobs:
   build:
@@ -31,9 +35,67 @@ jobs:
           root: .
           paths:
             - .
+  
+  # terraform init and plan for Development
+  terraform-dev-plan:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and plan
+          command: |
+            export AWS_ACCESS_KEY_ID = $AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY = $AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform plan
+  
+  # terraform init and apply
+  terraform-dev-apply:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and apply
+          command: |
+            export AWS_ACCESS_KEY_ID = $AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY = $AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform apply -auto-approve
 
 workflows:
   version: 2
   build_test_deploy:
     jobs:
       - build
+      - terraform-dev-plan:
+          context: org-global
+          filters:
+            branches: 
+              only: development
+      - terraform-dev-apply:
+          context: org-global
+          requires:
+            - terraform-dev-plan
+          filters:
+            branches:
+              only: development
