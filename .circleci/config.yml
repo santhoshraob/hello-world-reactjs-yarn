@@ -208,12 +208,19 @@ workflows:
             branches: 
               only: stage
 
+      # - s3-deploy-stage:
+      #     type: approval
+      #     requires:
+      #       - s3-deploy-dev
+      #     filters:
+      #       branches:
+      #         only: stage
       - s3-deploy-stage:
-          type: approval
           requires:
-            - s3-deploy-dev
+            - build
+            - terraform-stage-plan
+            - terraform-stage-apply
           filters:
             branches:
               only: stage
-      
       
