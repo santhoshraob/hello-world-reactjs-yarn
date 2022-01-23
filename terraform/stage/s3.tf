@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 # S3 Bucket 
-resource "aws_s3_bucket" "main" {
+resource "aws_s3_bucket" "stage" {
   bucket = var.bucket_name
   acl    = "public-read"
   policy = data.aws_iam_policy_document.client_portal_s3_policy.json
