@@ -8,6 +8,10 @@ executors:
     docker:
       - image: cimg/node:16.10.0
     working_directory: ~/repo
+  terra:
+    docker:
+      - image: hashicorp/terraform:light
+    working_directory: ~/repo
   
 jobs:
   build:
@@ -31,9 +35,194 @@ jobs:
           root: .
           paths:
             - .
-
+  
+  # terraform init and plan for Development
+  terraform-dev-plan:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and plan
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform plan
+  
+  # terraform init and apply
+  terraform-dev-apply:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and apply
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform apply -auto-approve
+  
+  # terraform init and plan for Stage
+  terraform-stage-plan:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and plan
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform plan
+  
+  # terraform init and apply for Stage
+  terraform-stage-apply:
+    executor: terra
+    parameters:
+      tf_var_aws_access_key:
+        type: string
+        default: UNKNOWN
+      tf_var_aws_secret_key:
+        type: string
+        default: UNKNOWN
+    steps:
+      - attach_workspace:
+          at: /tmp/versions
+      - checkout
+      - run:
+          name: terraform init and apply
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            cd ./terraform/development
+            terraform init
+            terraform apply -auto-approve
+  
+  # deploying reactjs content to DEV s3-bucket
+  s3-deploy-dev:
+    executor: my-executor
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: |
+            echo "this command is running from s3-deploy-dev"
+      - aws-s3/sync:
+          from: ./build
+          to: 's3://dev-website-circleci.com/'
+          arguments: |
+            --delete \
+            --acl public-read \
+            --cache-control "max-age=86400"
+  
+  # deploying reactjs content to STAGE s3-bukcet
+  s3-deploy-stage:
+    executor: my-executor
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          command: |
+            echo "this command is running from s3-deploy-stage"
+      - aws-s3/sync:
+          from: ./build
+          to: 's3://stage-website-circleci.com/'
+          arguments: |
+            --delete \
+            --acl public-read \
+            --cache-control "max-age=86400"
+          
 workflows:
   version: 2
   build_test_deploy:
     jobs:
-      - build
+      - terraform-dev-plan:
+          context: terraform
+          filters:
+            branches: 
+              only: development
+      - terraform-dev-apply:
+          context: terraform
+          requires:
+            - terraform-dev-plan
+          filters:
+            branches:
+              only: development
+      - build:
+          requires:
+            - terraform-dev-plan
+            - terraform-dev-apply
+            - terraform-stage-plan
+            - terraform-stage-apply
+          filters:
+            branches:
+              only:   
+                - development
+                - main 
+      - s3-deploy-dev:
+          requires:
+            - build
+            - terraform-dev-plan
+            - terraform-dev-apply
+          filters:
+            branches:
+              only: development
+      - terraform-stage-plan:
+          context: terraform
+          filters:
+            branches: 
+              only: main
+      - terraform-stage-apply:
+          context: terraform
+          requires:
+            - terraform-stage-plan
+          filters:
+            branches: 
+              only: main
+
+      # - s3-deploy-stage:
+      #     type: approval
+      #     requires:
+      #       - s3-deploy-dev
+      #     filters:
+      #       branches:
+      #         only: stage
+      - s3-deploy-stage:
+          requires:
+            - build
+            - terraform-stage-plan
+            - terraform-stage-apply
+          filters:
+            branches:
+              only: main
+      
